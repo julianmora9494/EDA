@@ -15,8 +15,10 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 st.set_page_config(page_title="Conclusiones Ejecutivas", page_icon="📋", layout="wide")
 
-import os
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import API_URL
 
 # Verificar datos
 if "profile" not in st.session_state or st.session_state.profile is None:
