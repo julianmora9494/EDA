@@ -68,7 +68,8 @@ EDA_Dashboard/
 - **API Docs**: http://localhost:8000/docs
 
 **Producción (Streamlit Cloud):**
-- Ver `DESPLEGAR.md` para instrucciones de despliegue
+- Dashboard: https://cmlrxnzf5swzomwluzgibh.streamlit.app
+- API Backend: https://eda-dashboard-api.onrender.com
 
 ## Troubleshooting
 
