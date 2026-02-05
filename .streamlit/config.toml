@@ -3,10 +3,15 @@ headless = true
 port = 8503
 enableCORS = false
 enableXsrfProtection = false
+maxUploadSize = 200
 
 [browser]
 gatherUsageStats = false
-serverPort = 8503
+serverAddress = "0.0.0.0"
 
 [client]
 showErrorDetails = true
+
+[runner]
+magicEnabled = true
+fastReruns = false
