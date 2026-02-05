@@ -6,34 +6,34 @@ import os
 
 def get_api_url():
     """
-    Obtener URL de la API desde múltiples fuentes.
-    Prioridad: Variable de entorno > Streamlit Secrets > URL de producción > Localhost
+    Obtener URL de la API.
+    En producción usa Render, en local usa localhost.
     """
-    # 1. Primero intentar variable de entorno
-    if os.getenv("API_URL"):
-        return os.getenv("API_URL")
+    # 1. Variable de entorno (más prioritaria)
+    api_url = os.getenv("API_URL")
+    if api_url:
+        return api_url
     
-    # 2. Intentar leer desde secrets de Streamlit Cloud
+    # 2. Secrets de Streamlit Cloud
     try:
         import streamlit as st
-        if "API_URL" in st.secrets:
+        if hasattr(st, 'secrets') and "API_URL" in st.secrets:
             return st.secrets["API_URL"]
     except:
         pass
     
-    # 3. Si estamos en producción (detectar por hostname)
+    # 3. Detectar si estamos en producción
+    # Si no hay localhost en la URL, asumir producción
     try:
-        import socket
-        hostname = socket.gethostname()
-        if "streamlit" in hostname.lower() or "render" in hostname.lower():
-            # Estamos en Streamlit Cloud, usar API de producción
+        # Streamlit Cloud siempre setea esta variable
+        if os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_SERVER_PORT"):
             return "https://eda-dashboard-api.onrender.com"
     except:
         pass
     
-    # 4. Fallback a localhost para desarrollo
+    # 4. Desarrollo local
     return "http://localhost:8000"
 
 
-# Exportar para uso directo
+# URL global
 API_URL = get_api_url()

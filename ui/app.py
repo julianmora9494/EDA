@@ -3,6 +3,7 @@ Streamlit Dashboard - Página principal (Carga de archivos).
 """
 import streamlit as st
 import requests
+import os
 from pathlib import Path
 
 # Configuración de la página
@@ -13,8 +14,24 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# URL de la API
-from config import API_URL
+# URL de la API - Configuración inline para evitar problemas de importación
+def get_api_url():
+    # Secrets de Streamlit Cloud
+    try:
+        if "API_URL" in st.secrets:
+            return st.secrets["API_URL"]
+    except:
+        pass
+    # Variable de entorno
+    if os.getenv("API_URL"):
+        return os.getenv("API_URL")
+    # Producción (detectar por variables de Streamlit Cloud)
+    if os.getenv("STREAMLIT_SHARING_MODE"):
+        return "https://eda-dashboard-api.onrender.com"
+    # Desarrollo local
+    return "http://localhost:8000"
+
+API_URL = get_api_url()
 
 # Estilos CSS personalizados
 st.markdown("""

@@ -16,9 +16,21 @@ st.set_page_config(page_title="Descargas - EDA Dashboard", page_icon="📥", lay
 
 st.title("📥 Exportar Resultados")
 
-# Importar configuración
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import API_URL
+# URL de la API
+import os
+def get_api_url():
+    try:
+        if "API_URL" in st.secrets:
+            return st.secrets["API_URL"]
+    except:
+        pass
+    if os.getenv("API_URL"):
+        return os.getenv("API_URL")
+    if os.getenv("STREAMLIT_SHARING_MODE"):
+        return "https://eda-dashboard-api.onrender.com"
+    return "http://localhost:8000"
+
+API_URL = get_api_url()
 
 # Verificar que hay datos cargados
 if "profile" not in st.session_state or st.session_state.profile is None:
