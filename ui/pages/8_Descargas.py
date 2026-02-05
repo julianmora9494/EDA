@@ -7,10 +7,9 @@ import json
 import sys
 from pathlib import Path
 
-# Agregar ruta de módulos
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from api.services.html_exporter import generate_html_report
+# Importar utilidades del frontend
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils import generate_simple_html_report
 
 st.set_page_config(page_title="Descargas - EDA Dashboard", page_icon="📥", layout="wide")
 
@@ -124,7 +123,7 @@ with col2:
                 dataset_data = data_response.json()
                 
                 # Generar HTML con datos completos
-                html_content = generate_html_report(profile, dataset_id[:16], dataset_data)
+                html_content = generate_simple_html_report(profile, dataset_id[:16])
                 
                 st.download_button(
                     label="💾 Guardar reporte.html",
