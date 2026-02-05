@@ -1,3 +1,0 @@
-# Paquetes del sistema necesarios para Streamlit Cloud
-build-essential
-libgomp1
