@@ -34,7 +34,7 @@ Se abrirán automáticamente:
 
 ## 📊 Características
 
-- **Análisis Patrimonial**: Balance general e indicadores financieros
+- **Análisis de Saldos**: Cifras generales de activos y pasivos con análisis de desbalance
 - **Análisis de Productos**: Penetración y cross-sell
 - **Análisis Geográfico**: Mapas interactivos
 - **Análisis de Calidad**: Detección de nulos y duplicados

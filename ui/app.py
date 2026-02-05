@@ -56,7 +56,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<div class="main-header">📊 EDA Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">📊 Exploratory Data Analysis (EDA)</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Análisis Exploratorio de Datos Automatizado</div>', unsafe_allow_html=True)
 
 # Verificar conexión con API
@@ -147,23 +147,24 @@ if uploaded_file is not None:
                             # Mostrar resumen rápido
                             overview = profile.get("overview", {})
                             
-                            st.markdown("### 📊 Resumen Rápido")
+                            st.markdown("### 📊 Resumen Rápido del Dataset")
                             
                             col1, col2, col3, col4 = st.columns(4)
                             
                             with col1:
-                                st.metric("Total de Filas", f"{overview.get('n_rows', 0):,}")
+                                st.metric("📈 Total de Filas", f"{overview.get('n_rows', 0):,}")
                             
                             with col2:
-                                st.metric("Total de Columnas", f"{overview.get('n_columns', 0):,}")
+                                st.metric("📊 Total de Columnas", f"{overview.get('n_columns', 0):,}")
                             
                             with col3:
-                                st.metric("Memoria", f"{overview.get('memory_mb', 0):.2f} MB")
+                                st.metric("💾 Memoria", f"{overview.get('memory_mb', 0):.2f} MB")
                             
                             with col4:
-                                st.metric("Duplicados", f"{overview.get('n_duplicate_rows', 0):,}")
+                                st.metric("🔄 Duplicados", f"{overview.get('n_duplicate_rows', 0):,}")
                             
-                            st.info("👈 Navega por las páginas en el menú lateral para ver análisis detallados")
+                            st.divider()
+                            st.info("👈 **Siguiente paso**: Navega por las páginas en el menú lateral para ver análisis detallados de tu dataset")
                         else:
                             st.error("Error al obtener el perfil del dataset")
                     else:

@@ -1,31 +1,51 @@
 @echo off
+REM EDA Dashboard - Ejecutable para iniciar la aplicación
 cd /d "%~dp0"
 
-echo Iniciando EDA Dashboard...
+echo.
+echo ========================================
+echo  INICIANDO EDA DASHBOARD
+echo ========================================
 echo.
 
-REM Usar la ruta COMPLETA al Python del entorno virtual
 set VENV_PYTHON=%~dp0venv_eda\Scripts\python.exe
 
-REM Iniciar Backend con Python del venv
-start "Backend" cmd /k "%VENV_PYTHON% -m uvicorn api.main:app --reload --port 8000"
+if not exist "%VENV_PYTHON%" (
+    echo [ERROR] Entorno virtual no encontrado
+    echo Crea el entorno con: python -m venv venv_eda
+    pause
+    exit /b 1
+)
 
-REM Esperar 6 segundos
-timeout /t 6 /nobreak >nul
+echo [INFO] Verificando dependencias...
+"%VENV_PYTHON%" -c "import fastapi, uvicorn, streamlit, pandas" >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] Instalando dependencias...
+    "%VENV_PYTHON%" -m pip install -r requirements.txt
+)
 
-REM Iniciar Frontend con Python del venv (desactivar file watcher)
-start "Frontend" cmd /k "%VENV_PYTHON% -m streamlit run ui\app.py --server.port 8503 --server.fileWatcherType none"
+echo [OK] Iniciando Backend (Puerto 8000)...
+start "Backend - EDA Dashboard" cmd /k "cd /d "%~dp0" && "%VENV_PYTHON%" -m uvicorn api.main:app --reload --port 8000"
 
-REM Esperar 8 segundos
+echo [INFO] Esperando 8 segundos...
 timeout /t 8 /nobreak >nul
 
-REM Abrir navegador
-start http://localhost:8503
+echo [OK] Iniciando Frontend (Puerto 8503)...
+start "Frontend - EDA Dashboard" cmd /k "cd /d "%~dp0" && "%VENV_PYTHON%" -m streamlit run ui/app.py --server.port 8503"
+
+echo [INFO] Esperando 10 segundos...
+timeout /t 10 /nobreak >nul
 
 echo.
-echo Dashboard iniciado en:
-echo - Backend: http://localhost:8000/docs
-echo - Frontend: http://localhost:8503
+echo ========================================
+echo  DASHBOARD INICIADO
+echo ========================================
 echo.
-echo NO cierres las 2 ventanas que se abrieron
+echo Backend:  http://localhost:8000/docs
+echo Frontend: http://localhost:8503
 echo.
+
+start "" http://localhost:8503
+
+echo Abriendo navegador...
+pause
