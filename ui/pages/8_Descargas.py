@@ -16,7 +16,8 @@ st.set_page_config(page_title="Descargas - EDA Dashboard", page_icon="📥", lay
 
 st.title("📥 Exportar Resultados")
 
-API_URL = "http://localhost:8000"
+import os
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # Verificar que hay datos cargados
 if "profile" not in st.session_state or st.session_state.profile is None:

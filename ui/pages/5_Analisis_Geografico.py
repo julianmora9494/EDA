@@ -15,7 +15,8 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 st.set_page_config(page_title="Análisis Geográfico", page_icon="🌎", layout="wide")
 
-API_URL = "http://localhost:8000"
+import os
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 if "profile" not in st.session_state or st.session_state.profile is None:
     st.warning("⚠️ No hay dataset cargado.")

@@ -14,7 +14,8 @@ st.set_page_config(
 )
 
 # URL de la API
-API_URL = "http://localhost:8000"
+import os
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # Estilos CSS personalizados
 st.markdown("""
