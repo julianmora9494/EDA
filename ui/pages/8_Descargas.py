@@ -4,111 +4,87 @@ Página de Descargas: Exportar perfiles y datos.
 import streamlit as st
 import requests
 import json
-import sys
-from pathlib import Path
-
-# Importar utilidades del frontend
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from utils import generate_simple_html_report
+import os
+from datetime import datetime
 
 st.set_page_config(page_title="Descargas - EDA Dashboard", page_icon="📥", layout="wide")
 
 st.title("📥 Exportar Resultados")
 
 # URL de la API
-import os
-def get_api_url():
-    try:
-        if "API_URL" in st.secrets:
-            return st.secrets["API_URL"]
-    except:
-        pass
-    if os.getenv("API_URL"):
-        return os.getenv("API_URL")
-    if os.getenv("STREAMLIT_SHARING_MODE"):
-        return "https://eda-dashboard-api.onrender.com"
-    return "http://localhost:8000"
-
-API_URL = get_api_url()
+API_URL = os.getenv("API_URL", "https://eda-dashboard-api.onrender.com")
+try:
+    if "API_URL" in st.secrets:
+        API_URL = st.secrets["API_URL"]
+except:
+    pass
 
 # Verificar que hay datos cargados
-if "profile" not in st.session_state or st.session_state.profile is None:
-    st.warning("⚠️ No hay dataset cargado. Ve a la página principal para subir un archivo.")
+if "dataset_id" not in st.session_state:
+    st.warning("⚠️ No hay ningún dataset cargado.")
+    st.info("👈 Ve a la página principal para cargar un archivo.")
     st.stop()
 
-profile = st.session_state.profile
-dataset_id = st.session_state.dataset_id
+dataset_id = st.session_state["dataset_id"]
+filename = st.session_state.get("filename", "dataset")
 
-st.markdown("""
-Descarga los resultados del análisis EDA en diferentes formatos para:
-- 📊 Reportes y documentación
-- 🔄 Compartir con el equipo
-- 💾 Archivar análisis
-- 🔧 Procesamiento posterior
-""")
+st.success(f"📊 Dataset activo: **{filename}**")
 
 st.divider()
 
-# Sección 1: Perfil EDA
-st.subheader("📊 Perfil EDA Completo")
+# Sección 1: Exportar perfil JSON
+st.subheader("📄 Perfil Completo (JSON)")
 
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    **Contenido del perfil:**
-    - Overview del dataset
-    - Metadata de todas las columnas
-    - Tipos inferidos y roles
-    - Quality checks (missing, duplicados, constantes)
-    - Asociaciones y correlaciones
-    - Hallazgos automáticos
-    - Vista previa de datos
+    **Contenido:**
+    - Resumen estadístico completo
+    - Análisis de calidad
+    - Información de columnas
+    - Insights detectados
     
     **Formato:** JSON
     """)
 
 with col2:
-    if st.button("⬇️ Descargar Perfil JSON", use_container_width=True):
+    if st.button("⬇️ Descargar Perfil JSON", use_container_width=True, key="export_json"):
         try:
-            # El perfil ya está en session_state, podemos descargarlo directamente
-            json_str = json.dumps(profile, indent=2, ensure_ascii=False)
+            response = requests.get(f"{API_URL}/datasets/{dataset_id}/profile")
             
-            st.download_button(
-                label="💾 Guardar perfil.json",
-                data=json_str,
-                file_name=f"perfil_eda_{dataset_id[:8]}.json",
-                mime="application/json",
-                use_container_width=True
-            )
-            
-            st.success("✅ Perfil listo para descargar")
+            if response.status_code == 200:
+                profile_data = response.json()
+                
+                st.download_button(
+                    label="💾 Guardar perfil.json",
+                    data=json.dumps(profile_data, indent=2, ensure_ascii=False),
+                    file_name=f"perfil_{dataset_id[:8]}.json",
+                    mime="application/json",
+                    use_container_width=True,
+                    key="download_json"
+                )
+                
+                st.success("✅ Perfil JSON listo para descargar")
+            else:
+                st.error(f"Error al obtener perfil: {response.status_code}")
         except Exception as e:
-            st.error(f"Error al preparar descarga: {str(e)}")
+            st.error(f"❌ Error: {str(e)}")
 
 st.divider()
 
-# Sección 2: Exportar a HTML
-st.subheader("🌐 Reporte HTML Interactivo")
+# Sección 2: Exportar HTML
+st.subheader("🌐 Reporte HTML")
 
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    **Archivo HTML independiente:**
-    - 📄 Documento completo y profesional
-    - 🎨 Estilos modernos incluidos
-    - 📊 Toda la información en un archivo
-    - 🌐 Abre en cualquier navegador
-    - 🖨️ Listo para imprimir
-    - 👥 Perfecto para compartir con otros
-    
     **Contenido:**
-    - Resumen ejecutivo con métricas
-    - Análisis de calidad de datos
-    - Diccionario de datos completo
-    - Hallazgos y recomendaciones
-    - Información técnica
+    - Resumen ejecutivo
+    - Análisis de calidad
+    - Diccionario de datos
+    - Visualizaciones estáticas
     
     **Formato:** HTML5
     """)
@@ -116,30 +92,85 @@ with col1:
 with col2:
     if st.button("⬇️ Descargar Reporte HTML", use_container_width=True, key="export_html"):
         try:
-            # Obtener datos completos del dataset
-            data_response = requests.get(f"{API_URL}/datasets/{dataset_id}/data")
+            response = requests.get(f"{API_URL}/datasets/{dataset_id}/profile")
             
-            if data_response.status_code == 200:
-                dataset_data = data_response.json()
+            if response.status_code == 200:
+                profile = response.json()
                 
-                # Generar HTML con datos completos
-                html_content = generate_simple_html_report(profile, dataset_id[:16])
+                # Generar HTML simple
+                overview = profile.get("overview", {})
+                n_rows = overview.get("n_rows", 0)
+                n_columns = overview.get("n_columns", 0)
+                
+                html_content = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte EDA - {filename}</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }}
+        .header {{
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }}
+        h1 {{ color: #667eea; }}
+        .metric {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }}
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Reporte de Análisis</h1>
+        <p>Dataset: {filename}</p>
+        <p>Generado: {datetime.now().strftime("%d/%m/%Y %H:%M")}</p>
+    </div>
+    
+    <div class="metric">
+        <h2>Resumen</h2>
+        <p>Total de filas: <span class="metric-value">{n_rows:,}</span></p>
+        <p>Total de columnas: <span class="metric-value">{n_columns:,}</span></p>
+    </div>
+    
+    <div class="metric">
+        <h2>Información Completa</h2>
+        <pre>{json.dumps(profile, indent=2, ensure_ascii=False)}</pre>
+    </div>
+</body>
+</html>"""
                 
                 st.download_button(
                     label="💾 Guardar reporte.html",
                     data=html_content,
-                    file_name=f"reporte_completo_{dataset_id[:8]}.html",
+                    file_name=f"reporte_{dataset_id[:8]}.html",
                     mime="text/html",
                     use_container_width=True,
                     key="download_html"
                 )
                 
-                st.success("✅ Reporte HTML completo listo para descargar")
-                st.info("📊 Incluye: Resumen, Calidad, Productos, Patrimonio, Geográfico, Insights y más")
+                st.success("✅ Reporte HTML listo para descargar")
             else:
-                st.error("No se pudieron obtener los datos para generar el reporte completo")
+                st.error("No se pudo generar el reporte")
         except Exception as e:
-            st.error(f"❌ Error al generar reporte HTML: {str(e)}")
+            st.error(f"❌ Error: {str(e)}")
 
 st.divider()
 
@@ -150,131 +181,54 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
-    **Formato CSV**
-    - Compatible con Excel, R, Python, etc.
-    - Fácil de leer y editar
-    - Texto plano
-    """)
+    **Contenido:**
+    - Dataset completo procesado
+    - Todos los registros
+    - Todas las columnas
     
-    if st.button("⬇️ Descargar CSV", use_container_width=True):
-        try:
-            response = requests.get(f"{API_URL}/datasets/{dataset_id}/export/data?format=csv")
-            
-            if response.status_code == 200:
-                st.download_button(
-                    label="💾 Guardar datos.csv",
-                    data=response.content,
-                    file_name=f"datos_{dataset_id[:8]}.csv",
-                    mime="text/csv",
-                    use_container_width=True
-                )
-                st.success("✅ CSV listo para descargar")
-            else:
-                st.error(f"Error al exportar: {response.text}")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-with col2:
-    st.markdown("""
-    **Formato Parquet**
-    - Comprimido y eficiente
-    - Tipos de datos preservados
-    - Ideal para procesamiento
-    """)
-    
-    if st.button("⬇️ Descargar Parquet", use_container_width=True):
-        try:
-            response = requests.get(f"{API_URL}/datasets/{dataset_id}/export/data?format=parquet")
-            
-            if response.status_code == 200:
-                st.download_button(
-                    label="💾 Guardar datos.parquet",
-                    data=response.content,
-                    file_name=f"datos_{dataset_id[:8]}.parquet",
-                    mime="application/octet-stream",
-                    use_container_width=True
-                )
-                st.success("✅ Parquet listo para descargar")
-            else:
-                st.error(f"Error al exportar: {response.text}")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-st.divider()
-
-# Sección 4: Resumen ejecutivo
-st.subheader("📄 Resumen Ejecutivo")
-
-st.markdown("Copia el resumen en markdown para documentación:")
-
-overview = profile["overview"]
-quality = profile["quality"]
-insights = profile.get("insights", [])
-
-markdown_summary = f"""
-# Resumen EDA - Dataset {dataset_id[:16]}
-
-## 📊 Overview
-
-- **Filas:** {overview['n_rows']:,}
-- **Columnas:** {overview['n_columns']}
-- **Memoria:** {overview['memory_mb']:.2f} MB
-- **Duplicados:** {overview['pct_duplicate_rows']:.1f}%
-
-## 🔍 Calidad de Datos
-
-- **Missing global:** {quality['missing']['pct_missing_global']:.1f}%
-- **Columnas con missing:** {quality['missing']['columns_with_missing']}
-- **Columnas constantes:** {quality['constants']['n_constant_columns']}
-
-## 🏷️ Tipos de Variables
-
-{chr(10).join([f"- **{role}:** {count}" for role, count in sorted([(r, list(profile['column_roles'].values()).count(r)) for r in set(profile['column_roles'].values())], key=lambda x: x[1], reverse=True)])}
-
-## 💡 Hallazgos ({len(insights)})
-
-{chr(10).join([f"- **[{i.get('severity', 'low').upper()}]** {i.get('title', '')}" for i in insights[:10]])}
-
-## 📈 Top Variables (por relevancia)
-
-{chr(10).join([f"{idx}. **{col['name']}** ({col['role']}) - Score: {col.get('relevance_score', 0):.1f}" for idx, col in enumerate(sorted(profile['columns'], key=lambda x: x.get('relevance_score', 0), reverse=True)[:10], 1)])}
-
----
-
-*Generado con EDA Dashboard v1.0*
-*Fecha: {profile['profiled_at']}*
-"""
-
-st.text_area(
-    "Markdown",
-    markdown_summary,
-    height=400,
-    help="Copia este texto para documentación"
-)
-
-if st.button("📋 Copiar al portapapeles"):
-    st.code(markdown_summary)
-    st.info("Selecciona el texto de arriba y copia manualmente (Ctrl+C)")
-
-st.divider()
-
-# Info adicional
-st.subheader("ℹ️ Información del Análisis")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.info(f"""
-    **Dataset:**
-    - ID: `{dataset_id}`
-    - Hoja: `{profile['sheet_name']}`
-    - Perfilado: {profile['profiled_at']}
+    **Formato:** CSV
     """)
 
 with col2:
-    st.info(f"""
-    **Performance:**
-    - Duración: {profile['profile_duration_seconds']:.2f}s
-    - Muestreado: {'Sí' if profile['sampled'] else 'No'}
-    - Cache: {'Sí' if profile.get('from_cache') else 'No'}
-    """)
+    if st.button("⬇️ Descargar Datos CSV", use_container_width=True, key="export_csv"):
+        try:
+            response = requests.get(f"{API_URL}/datasets/{dataset_id}/data")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Convertir a CSV simple
+                import io
+                output = io.StringIO()
+                
+                if "data" in data and len(data["data"]) > 0:
+                    # Escribir headers
+                    headers = list(data["data"][0].keys())
+                    output.write(",".join(headers) + "\n")
+                    
+                    # Escribir filas
+                    for row in data["data"]:
+                        values = [str(row.get(h, "")) for h in headers]
+                        output.write(",".join(values) + "\n")
+                    
+                    csv_data = output.getvalue()
+                    
+                    st.download_button(
+                        label="💾 Guardar datos.csv",
+                        data=csv_data,
+                        file_name=f"datos_{dataset_id[:8]}.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                        key="download_csv"
+                    )
+                    
+                    st.success("✅ Datos CSV listos para descargar")
+                else:
+                    st.warning("No hay datos disponibles")
+            else:
+                st.error("No se pudieron obtener los datos")
+        except Exception as e:
+            st.error(f"❌ Error: {str(e)}")
+
+st.divider()
+st.caption("EDA Dashboard - Exportación de Resultados")
