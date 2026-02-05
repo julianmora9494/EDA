@@ -167,28 +167,6 @@ with tab1:
     
     st.divider()
     
-    st.markdown("### 📊 Distribución de Clientes por Tipo de Saldo")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Total Clientes", f"{total_clientes:,}")
-        st.caption("Base completa")
-    
-    with col2:
-        st.metric("Con ACTIVOS", f"{clientes_con_activos:,}")
-        st.caption("Saldo > $0")
-    
-    with col3:
-        st.metric("Con PASIVOS", f"{clientes_con_pasivos:,}")
-        st.caption("Saldo > $0")
-    
-    with col4:
-        st.metric("Sin Productos", f"{clientes_sin_productos:,}")
-        st.caption("Saldo = $0 en ambos")
-    
-    st.divider()
-    
     # Explicación clara del ratio
     st.markdown("### 📖 Interpretación del Ratio A/P")
     
