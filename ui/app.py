@@ -15,7 +15,12 @@ st.set_page_config(
 
 # URL de la API
 import os
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+try:
+    # Intentar leer desde secrets de Streamlit Cloud
+    API_URL = st.secrets.get("API_URL", "http://localhost:8000")
+except:
+    # Fallback a variable de entorno o localhost
+    API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 # Estilos CSS personalizados
 st.markdown("""
