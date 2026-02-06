@@ -14,8 +14,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# URL de la API
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+# URL de la API (importar desde config para manejar secrets correctamente)
+try:
+    from .config import API_URL
+except ImportError:
+    # Fallback si falla la importación relativa
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from config import API_URL
 
 # Estilos CSS personalizados
 st.markdown("""
