@@ -80,18 +80,18 @@ st.markdown("""
 st.markdown('<div class="main-header">📊 Exploratory Data Analysis (EDA)</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Análisis Exploratorio de Datos Automatizado</div>', unsafe_allow_html=True)
 
-# Verificar conexión con API
-with st.spinner("Verificando conexión con el servidor..."):
-    try:
-        response = requests.get(f"{API_URL}/", timeout=5)
+# Verificar conexión con API (sin bloquear si falla)
+try:
+    with st.spinner("Verificando conexión con el servidor..."):
+        response = requests.get(f"{API_URL}/health", timeout=10)
         if response.status_code == 200:
             st.success("✅ Conectado al servidor correctamente")
         else:
-            st.warning(f"⚠️ Servidor respondió con código: {response.status_code}")
-    except Exception as e:
-        st.error(f"❌ No se puede conectar con el servidor en {API_URL}")
-        st.info("💡 Asegúrate de que el backend esté corriendo: `python -m uvicorn api.main:app --reload --port 8000`")
-        st.stop()
+            st.warning(f"⚠️ Servidor respondió con código: {response.status_code}. El backend puede estar iniciando...")
+except Exception as e:
+    st.warning(f"⚠️ El servidor está iniciando... Esto puede tomar 30-60 segundos en el plan gratuito de Render.")
+    st.info(f"🔗 Backend: {API_URL}")
+    st.caption("💡 La app funcionará una vez que el backend despierte. Intenta recargar en unos segundos.")
 
 st.divider()
 
