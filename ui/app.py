@@ -14,15 +14,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# URL de la API (importar desde config para manejar secrets correctamente)
-try:
-    from .config import API_URL
-except ImportError:
-    # Fallback si falla la importación relativa
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).parent))
-    from config import API_URL
+# URL de la API - Detectar automáticamente según el entorno
+def get_api_url():
+    """Obtener URL de la API según el entorno."""
+    # 1. Secrets de Streamlit Cloud (producción)
+    try:
+        if "API_URL" in st.secrets:
+            return st.secrets["API_URL"]
+    except:
+        pass
+    
+    # 2. Variable de entorno
+    api_url = os.getenv("API_URL")
+    if api_url:
+        return api_url
+    
+    # 3. Detectar si estamos en Streamlit Cloud
+    if os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_SERVER_PORT"):
+        return "https://eda-dashboard-api.onrender.com"
+    
+    # 4. Desarrollo local
+    return "http://localhost:8000"
+
+API_URL = get_api_url()
 
 # Estilos CSS personalizados
 st.markdown("""
