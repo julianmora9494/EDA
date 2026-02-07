@@ -203,7 +203,7 @@ with tab1:
     **¿Por qué es importante?**
     - Identificar productos más populares (alta penetración)
     - Detectar productos con baja adopción (oportunidad de marketing)
-    - Validar que los valores coincidan con "Análisis Patrimonial"
+    - Validar que los valores coincidan con "Análisis de Saldos"
     """)
     
     tenencia_data = []
@@ -269,7 +269,7 @@ with tab1:
             hide_index=True
         )
         
-        st.caption("**Nota**: Suma y Promedio incluyen TODOS los valores (positivos, negativos, ceros). Valores idénticos a pestaña Patrimonial.")
+        st.caption("**Nota**: Suma y Promedio incluyen TODOS los valores (positivos, negativos, ceros). Valores idénticos a pestaña Análisis de Saldos.")
     
     st.divider()
     
@@ -338,7 +338,7 @@ with tab1:
 
 # ==================== TAB 2: MULTIVARIADO ====================
 with tab2:
-    st.header("🔗 Análisis Multivariado: Productos vs Patrimonio")
+    st.header("🔗 Análisis Multivariado: Productos vs Saldo Total")
     
     # 1. Productos vs Saldo Total
     if total_cuentas_col:
@@ -363,7 +363,7 @@ with tab2:
         df.loc[df[total_cuentas_col] >= 3, 'Segmento Productos'] = 'Multi'
         
         stats = df.groupby('Segmento Productos')[saldo_total_col].agg(['count', 'mean', 'median', 'sum']).round(0)
-        stats.columns = ['N° Clientes', 'Saldo Promedio', 'Saldo Mediano', 'Patrimonio Total']
+        stats.columns = ['N° Clientes', 'Saldo Promedio', 'Saldo Mediano', 'Saldo Total']
         
         col1, col2 = st.columns([1, 1])
         
@@ -373,7 +373,7 @@ with tab2:
                     'N° Clientes': '{:,.0f}',
                     'Saldo Promedio': '${:,.0f}',
                     'Saldo Mediano': '${:,.0f}',
-                    'Patrimonio Total': '${:,.0f}'
+                    'Saldo Total': '${:,.0f}'
                 }),
                 use_container_width=True
             )
@@ -513,8 +513,8 @@ with tab3:
         
         with col3:
             if len(df_sub) > 0:
-                patrimonio_sub = df_sub[saldo_total_col].sum()
-                st.metric("Patrimonio Total", f"${patrimonio_sub:,.0f}")
+                saldo_sub = df_sub[saldo_total_col].sum()
+                st.metric("Saldo Total", f"${saldo_sub:,.0f}")
         
         if len(df_sub) > 0:
             st.info(f"""

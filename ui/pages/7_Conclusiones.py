@@ -118,12 +118,12 @@ with col2:
         suma_activos = df[activos_col].sum()
         suma_pasivos = df[pasivos_col].sum()
         total_calculado = suma_activos + suma_pasivos
-        patrimonio_total = total_calculado  # Para usar después
+        total_saldos = total_calculado  # Para usar después
         st.metric("TOTAL (A + P)", f"${total_calculado:,.0f}")
         st.caption("Activos + Pasivos")
     else:
-        patrimonio_total = df[saldo_col].sum()
-        st.metric("Patrimonio Total", f"${patrimonio_total:,.0f}")
+        total_saldos = df[saldo_col].sum()
+        st.metric("Saldo Total", f"${total_saldos:,.0f}")
         st.caption(f"Suma de {saldo_col}")
 
 with col3:
@@ -151,21 +151,21 @@ p90 = df[saldo_col].quantile(0.90)
 p99 = df[saldo_col].quantile(0.99)
 
 alto_valor_count = len(df[df[saldo_col] >= p99])
-alto_valor_patrimonio = df[df[saldo_col] >= p99][saldo_col].sum()
-alto_valor_pct = (alto_valor_patrimonio / patrimonio_total * 100)
+alto_valor_saldo = df[df[saldo_col] >= p99][saldo_col].sum()
+alto_valor_pct = (alto_valor_saldo / total_saldos * 100)
 
 # Hallazgo 1: Concentración
-st.subheader("1️⃣ Concentración Patrimonial")
+st.subheader("1️⃣ Concentración de Saldos")
 
 col1, col2 = st.columns([2, 1])
 
 with col1:
     if pct_10 > 70:
         st.error(f"""
-        🔴 **Alta Concentración de Riqueza**
+        🔴 **Alta Concentración de Saldos**
         
-        - El **top 10%** concentra **{pct_10:.1f}%** del patrimonio total
-        - El **top 1%** representa **{alto_valor_pct:.1f}%** del patrimonio
+        - El **top 10%** concentra **{pct_10:.1f}%** del saldo total
+        - El **top 1%** representa **{alto_valor_pct:.1f}%** del saldo total
         - Solo **{alto_valor_count} registros** superan **${p99:,.0f}**
         
         **Implicación**: Alta dependencia de pocos registros de alto valor.
@@ -174,21 +174,21 @@ with col1:
         st.warning(f"""
         🟡 **Concentración Moderada-Alta**
         
-        - El **top 10%** concentra **{pct_10:.1f}%** del patrimonio total
+        - El **top 10%** concentra **{pct_10:.1f}%** del saldo total
         - Típico en datos financieros
         """)
     else:
         st.info(f"""
         🟢 **Concentración Moderada**
         
-        - El **top 10%** concentra **{pct_10:.1f}%** del patrimonio total
+        - El **top 10%** concentra **{pct_10:.1f}%** del saldo total
         - Distribución relativamente balanceada
         """)
 
 with col2:
     st.metric("Top 10% Concentra", f"{pct_10:.1f}%")
     st.metric("Top 1% (Alto Valor)", f"{alto_valor_count}")
-    st.metric("Patrimonio Top 1%", f"${alto_valor_patrimonio:,.0f}")
+    st.metric("Saldo Top 1%", f"${alto_valor_saldo:,.0f}")
 
 st.divider()
 
@@ -285,11 +285,11 @@ if banca_col and banca_col in df.columns:
         saldo_col: ['count', 'sum', 'mean']
     }).round(0)
     
-    banca_stats.columns = ['N° Registros', 'Patrimonio Total', 'Saldo Promedio']
+    banca_stats.columns = ['N° Registros', 'Saldo Total', 'Saldo Promedio']
     banca_stats['% Registros'] = (banca_stats['N° Registros'] / len(df) * 100).round(1)
-    banca_stats['% Patrimonio'] = (banca_stats['Patrimonio Total'] / patrimonio_total * 100).round(1)
+    banca_stats['% Saldo'] = (banca_stats['Saldo Total'] / total_saldos * 100).round(1)
     
-    banca_stats = banca_stats.sort_values('Patrimonio Total', ascending=False)
+    banca_stats = banca_stats.sort_values('Saldo Total', ascending=False)
     
     col1, col2 = st.columns([1, 1])
     
@@ -297,10 +297,10 @@ if banca_col and banca_col in df.columns:
         st.dataframe(
             banca_stats.style.format({
                 'N° Registros': '{:,.0f}',
-                'Patrimonio Total': '${:,.0f}',
+                'Saldo Total': '${:,.0f}',
                 'Saldo Promedio': '${:,.0f}',
                 '% Registros': '{:.1f}%',
-                '% Patrimonio': '{:.1f}%'
+                '% Saldo': '{:.1f}%'
             }),
             use_container_width=True
         )
@@ -308,12 +308,12 @@ if banca_col and banca_col in df.columns:
     with col2:
         # Identificar segmento con mayor concentración
         top_banca = banca_stats.index[0]
-        top_pct = banca_stats.loc[top_banca, '% Patrimonio']
+        top_pct = banca_stats.loc[top_banca, '% Saldo']
         
         st.info(f"""
         💡 **Insight**:
         
-        - **{top_banca}** concentra **{top_pct:.1f}%** del patrimonio total
+        - **{top_banca}** concentra **{top_pct:.1f}%** del saldo total
         - Diferencias significativas entre segmentos
         
         **Acción**: Estrategia diferenciada por segmento.
@@ -329,7 +329,7 @@ if activos_col and pasivos_col:
     df_apalancamiento['Ratio A/P'] = df_apalancamiento[activos_col] / df_apalancamiento[pasivos_col]
     
     muy_apalancados = len(df_apalancamiento[df_apalancamiento['Ratio A/P'] < 0.5])
-    patrimoniales = len(df_apalancamiento[df_apalancamiento['Ratio A/P'] > 2])
+    alta_liquidez = len(df_apalancamiento[df_apalancamiento['Ratio A/P'] > 2])
     
     col1, col2, col3 = st.columns(3)
     
@@ -337,16 +337,16 @@ if activos_col and pasivos_col:
         st.metric("Muy Apalancados", f"{muy_apalancados:,}", help="Pasivos > 2x Activos")
     
     with col2:
-        balanceados = len(df_apalancamiento) - muy_apalancados - patrimoniales
+        balanceados = len(df_apalancamiento) - muy_apalancados - alta_liquidez
         st.metric("Balanceados", f"{balanceados:,}", help="0.5 ≤ A/P ≤ 2")
     
     with col3:
-        st.metric("Patrimoniales", f"{patrimoniales:,}", help="Activos > 2x Pasivos")
+        st.metric("Alta Liquidez", f"{alta_liquidez:,}", help="Activos > 2x Pasivos")
     
     st.info(f"""
     💡 **Insight**:
     
-    - **{patrimoniales:,} registros patrimoniales** (alta liquidez) → Oportunidad de colocación
+    - **{alta_liquidez:,} registros con alta liquidez** (más captaciones que colocaciones) → Oportunidad de colocación
     - **{muy_apalancados:,} muy apalancados** → Monitorear riesgo
     """)
     
@@ -376,7 +376,7 @@ if edad_col and edad_col in df.columns:
         )
     
     with col2:
-        # Identificar tramo con mayor patrimonio
+        # Identificar tramo con mayor saldo promedio
         tramo_max = lifecycle_stats['Saldo Promedio'].idxmax()
         saldo_max = lifecycle_stats.loc[tramo_max, 'Saldo Promedio']
         
@@ -401,7 +401,7 @@ st.success("""
 **Acciones Prioritarias**:
 
 1️⃣ **Retención de Alto Valor**:
-   - Enfoque en el top 1-5% que concentra alto % del patrimonio
+   - Enfoque en el top 1-5% que concentra alto % del saldo total
    - Programa de beneficios exclusivos y atención personalizada
 
 2️⃣ **Cross-Sell** (si aplica):
