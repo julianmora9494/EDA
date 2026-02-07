@@ -134,9 +134,8 @@ else:
     # Agregar conteo de clientes
     df_pais['N_Clientes'] = df.groupby(pais_col).size().values
 
-# Calcular balance neto si hay ambos
+# Calcular suma total si hay ambos
 if activos_col and pasivos_col:
-    df_pais['Balance_Neto'] = df_pais[activos_col] - df_pais[pasivos_col]
     df_pais['Total_Balance'] = df_pais[activos_col] + df_pais[pasivos_col]
 
 # Agregar ISO
@@ -155,8 +154,7 @@ if not df_pais_map.empty and pasivos_col:
         'N° Clientes': 'N_Clientes',
         'Suma ACTIVOS': activos_col if activos_col else None,
         'Suma PASIVOS': pasivos_col if pasivos_col else None,
-        'Total Balance': 'Total_Balance' if activos_col and pasivos_col else None,
-        'Balance Neto': 'Balance_Neto' if activos_col and pasivos_col else None
+        'Total Balance (A+P)': 'Total_Balance' if activos_col and pasivos_col else None
     }
     
     # Filtrar opciones válidas
@@ -229,14 +227,13 @@ st.header("📊 Análisis Detallado por País")
 if activos_col and pasivos_col and 'Total_Balance' in df_pais.columns:
     df_pais_sorted = df_pais.sort_values('Total_Balance', ascending=False)
     
-    columns_to_show = [pais_col, 'N_Clientes', activos_col, pasivos_col, 'Balance_Neto', 'Total_Balance']
+    columns_to_show = [pais_col, 'N_Clientes', activos_col, pasivos_col, 'Total_Balance']
     
     st.dataframe(
         df_pais_sorted[columns_to_show].style.format({
             'N_Clientes': '{:,}',
             activos_col: '${:,.0f}',
             pasivos_col: '${:,.0f}',
-            'Balance_Neto': '${:,.0f}',
             'Total_Balance': '${:,.0f}'
         }).background_gradient(subset=['Total_Balance'], cmap='Reds'),
         use_container_width=True,

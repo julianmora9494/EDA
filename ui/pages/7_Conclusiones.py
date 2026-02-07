@@ -154,8 +154,8 @@ alto_valor_count = len(df[df[saldo_col] >= p99])
 alto_valor_saldo = df[df[saldo_col] >= p99][saldo_col].sum()
 alto_valor_pct = (alto_valor_saldo / total_saldos * 100)
 
-# Hallazgo 1: Concentración
-st.subheader("1️⃣ Concentración de Saldos")
+# Hallazgo 1: Distribución de Saldos
+st.subheader("1️⃣ Distribución y Concentración de Saldos")
 
 col1, col2 = st.columns([2, 1])
 
@@ -321,33 +321,37 @@ if banca_col and banca_col in df.columns:
     
     st.divider()
 
-# Hallazgo 5: Apalancamiento (si existen activos y pasivos)
+# Hallazgo 5: Relación Activos vs Pasivos (si existen ambos)
 if activos_col and pasivos_col:
-    st.subheader("5️⃣ Perfil de Apalancamiento")
+    st.subheader("5️⃣ Relación entre Activos y Pasivos")
     
-    df_apalancamiento = df[(df[activos_col] > 0) & (df[pasivos_col] > 0)].copy()
-    df_apalancamiento['Ratio A/P'] = df_apalancamiento[activos_col] / df_apalancamiento[pasivos_col]
+    df_relacion = df[(df[activos_col] > 0) & (df[pasivos_col] > 0)].copy()
     
-    muy_apalancados = len(df_apalancamiento[df_apalancamiento['Ratio A/P'] < 0.5])
-    alta_liquidez = len(df_apalancamiento[df_apalancamiento['Ratio A/P'] > 2])
+    # Clasificación simple por predominancia
+    mas_activos = len(df_relacion[df_relacion[activos_col] > df_relacion[pasivos_col]])
+    mas_pasivos = len(df_relacion[df_relacion[pasivos_col] > df_relacion[activos_col]])
+    equilibrados = len(df_relacion[df_relacion[activos_col] == df_relacion[pasivos_col]])
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Muy Apalancados", f"{muy_apalancados:,}", help="Pasivos > 2x Activos")
+        st.metric("Más Activos", f"{mas_activos:,}", help="Activos > Pasivos")
     
     with col2:
-        balanceados = len(df_apalancamiento) - muy_apalancados - alta_liquidez
-        st.metric("Balanceados", f"{balanceados:,}", help="0.5 ≤ A/P ≤ 2")
+        st.metric("Equilibrados", f"{equilibrados:,}", help="Activos = Pasivos")
     
     with col3:
-        st.metric("Alta Liquidez", f"{alta_liquidez:,}", help="Activos > 2x Pasivos")
+        st.metric("Más Pasivos", f"{mas_pasivos:,}", help="Pasivos > Activos")
+    
+    pct_mas_activos = (mas_activos / len(df_relacion) * 100)
+    pct_mas_pasivos = (mas_pasivos / len(df_relacion) * 100)
     
     st.info(f"""
     💡 **Insight**:
     
-    - **{alta_liquidez:,} registros con alta liquidez** (más captaciones que colocaciones) → Oportunidad de colocación
-    - **{muy_apalancados:,} muy apalancados** → Monitorear riesgo
+    - **{pct_mas_activos:.1f}%** tienen más Activos que Pasivos
+    - **{pct_mas_pasivos:.1f}%** tienen más Pasivos que Activos
+    - Distribución natural de la cartera
     """)
     
     st.divider()
