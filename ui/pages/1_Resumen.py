@@ -6,10 +6,16 @@ import sys
 from pathlib import Path
 
 # Añadir ruta para imports
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ui.components.metrics import display_overview_card, display_column_roles_summary
-from ui.components.tables import display_dataframe_preview, display_columns_table
+# Imports relativos que funcionan en Streamlit Cloud
+try:
+    from components.metrics import display_overview_card, display_column_roles_summary
+    from components.tables import display_dataframe_preview, display_columns_table
+except ImportError:
+    # Fallback para desarrollo local
+    from ui.components.metrics import display_overview_card, display_column_roles_summary
+    from ui.components.tables import display_dataframe_preview, display_columns_table
 
 st.set_page_config(page_title="Resumen - EDA Dashboard", page_icon="📊", layout="wide")
 

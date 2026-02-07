@@ -6,10 +6,16 @@ import sys
 from pathlib import Path
 
 # Añadir ruta para imports
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ui.components.charts import plot_missing_heatmap
-from ui.components.tables import display_insights_table
+# Imports relativos que funcionan en Streamlit Cloud
+try:
+    from components.charts import plot_missing_heatmap
+    from components.tables import display_insights_table
+except ImportError:
+    # Fallback para desarrollo local
+    from ui.components.charts import plot_missing_heatmap
+    from ui.components.tables import display_insights_table
 
 st.set_page_config(page_title="Calidad - EDA Dashboard", page_icon="🔍", layout="wide")
 

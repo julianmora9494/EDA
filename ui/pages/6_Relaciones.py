@@ -7,9 +7,14 @@ import sys
 from pathlib import Path
 
 # Añadir ruta para imports
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ui.components.charts import plot_correlation_heatmap
+# Imports relativos que funcionan en Streamlit Cloud
+try:
+    from components.charts import plot_correlation_heatmap
+except ImportError:
+    # Fallback para desarrollo local
+    from ui.components.charts import plot_correlation_heatmap
 
 st.set_page_config(page_title="Relaciones - EDA Dashboard", page_icon="🔗", layout="wide")
 
