@@ -1,0 +1,24 @@
+# Core data processing
+pandas>=2.0.0
+openpyxl>=3.0.0
+numpy>=1.24.0
+pyarrow>=14.0.0
+
+# Statistics
+scipy>=1.10.0
+statsmodels>=0.14.0
+
+# API Backend
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# UI Frontend
+streamlit>=1.28.0
+plotly>=5.17.0
+matplotlib>=3.7.0
+
+# Utils
+python-dateutil>=2.8.0
+jinja2>=3.1.0
