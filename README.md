@@ -1,94 +1,57 @@
-# 📊 EDA Dashboard - Análisis Exploratorio de Datos
+# 📊 Dashboard EDA - Análisis Exploratorio de Datos
 
-Dashboard profesional para análisis exploratorio de datos bancarios, construido con **Streamlit** y **FastAPI**.
+Dashboard interactivo para análisis exploratorio de datos bancarios.
 
-## 🚀 Inicio Rápido
+## 🚀 Demo en Vivo
 
-### Requisitos
-- Python 3.9+
-- pip (gestor de paquetes)
-- ~500 MB de espacio en disco
+**Accede al dashboard**: https://at34w5x8lgjfwtq2odczbm.streamlit.app
 
-### Instalación (Primera vez)
+Haz clic en **"Cargar Datos Demo"** para explorar con datos de ejemplo.
 
+## ✨ Características
+
+- 📈 **Análisis de Saldos**: Activos, Pasivos y Balance
+- 🛍️ **Análisis de Productos**: Tenencia y Cross-Sell
+- 🗺️ **Análisis Geográfico**: Mapa interactivo
+- 🔍 **Calidad de Datos**: Detección de nulos y duplicados
+- 📊 **Conclusiones**: Insights automáticos
+- 💾 **Exportación**: Reportes en múltiples formatos
+
+## 🏗️ Tecnologías
+
+- **Frontend**: Streamlit
+- **Backend**: FastAPI
+- **Análisis**: Pandas, NumPy, SciPy
+- **Visualización**: Plotly, Matplotlib
+
+## 📖 Documentación Completa
+
+Ver [DOCUMENTACION.md](DOCUMENTACION.md) para:
+- Instalación local
+- Despliegue en la nube
+- Guía de uso
+- Troubleshooting
+
+## 🎯 Uso Rápido
+
+### Opción 1: Demo Online (Recomendado)
+1. Ir a https://at34w5x8lgjfwtq2odczbm.streamlit.app
+2. Clic en "Cargar Datos Demo"
+3. Explorar las pestañas
+
+### Opción 2: Local
 ```bash
-# 1. Crear entorno virtual
-python -m venv venv_eda
-
-# 2. Activar entorno virtual
-.\venv_eda\Scripts\Activate.ps1  # Windows
-source venv_eda/bin/activate      # Linux/Mac
-
-# 3. Instalar dependencias
-python -m pip install -r requirements.txt
+git clone https://github.com/julianmora9494/EDA.git
+cd EDA_Dashboard
+pip install -r requirements.txt
+python -m streamlit run ui/app.py
 ```
 
-### Ejecutar Dashboard
+## 📞 Soporte
 
-**Doble clic en:** `iniciar_dashboard.bat`
+- **Issues**: GitHub Issues
+- **Docs**: Ver DOCUMENTACION.md
 
-Se abrirán automáticamente:
-- Backend (FastAPI - Puerto 8000)
-- Frontend (Streamlit - Puerto 8503)
-- Tu navegador
+---
 
-## 📊 Características
-
-- **Análisis de Saldos**: Cifras generales de activos y pasivos con análisis de desbalance
-- **Análisis de Productos**: Penetración y cross-sell
-- **Análisis Geográfico**: Mapas interactivos
-- **Análisis de Calidad**: Detección de nulos y duplicados
-- **Conclusiones Automáticas**: Hallazgos e insights
-- **Exportación**: Reportes en HTML, Excel, CSV
-
-## 🏗️ Arquitectura
-
-```
-EDA_Dashboard/
-├── api/              # Backend FastAPI
-├── ui/               # Frontend Streamlit
-├── eda/              # Motor de análisis
-├── data/             # Datos procesados
-├── reports/          # Reportes generados
-├── requirements.txt  # Dependencias
-└── iniciar_dashboard.bat
-```
-
-## 📂 Archivos Principales
-
-- **iniciar_dashboard.bat** - Ejecutable para iniciar (doble clic)
-- **README.md** - Este archivo
-- **DESPLEGAR.md** - Instrucciones de despliegue
-- **requirements.txt** - Dependencias del proyecto
-
-## 🔗 URLs
-
-**Local:**
-- **Dashboard**: http://localhost:8503
-- **API Docs**: http://localhost:8000/docs
-
-**Producción (Streamlit Cloud):**
-- Dashboard: https://cmlrxnzf5swzomwluzgibh.streamlit.app
-- API Backend: https://eda-dashboard-api.onrender.com
-
-## Troubleshooting
-
-### Error: "No se puede conectar con la API"
-1. Espera 10 segundos desde que abriste el dashboard
-2. Recarga la página (F5)
-3. Si persiste, cierra ambas ventanas y vuelve a ejecutar iniciar_dashboard.bat
-
-### Error: "Python no está instalado"
-Descarga Python desde: https://www.python.org/downloads/
-Asegúrate de marcar "Add Python to PATH" en la instalación
-
-### Error: Módulo no encontrado
-```powershell
-# En PowerShell:
-.\venv_eda\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-## 📄 Licencia
-
-Proyecto privado - Uso interno.
+**Versión**: 1.0.0 | **Estado**: ✅ Producción

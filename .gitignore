@@ -21,6 +21,9 @@ reports/
 *.xlsx
 *.xls
 
+# Excepciones: Datos demo (SÍ subir)
+!base_panama_mejorada.csv
+
 # IDE
 .vscode/
 .idea/

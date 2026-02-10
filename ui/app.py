@@ -112,11 +112,59 @@ st.divider()
 # Sección de carga de archivos
 st.subheader("📁 Cargar Archivo de Datos")
 
+# Opción para cargar datos demo automáticamente
+if "demo_loaded" not in st.session_state:
+    st.session_state.demo_loaded = False
+
+col_demo1, col_demo2 = st.columns([3, 1])
+
+with col_demo1:
+    st.info("💡 **Tip**: Puedes explorar el dashboard con datos de ejemplo haciendo clic en 'Cargar Datos Demo'")
+
+with col_demo2:
+    if st.button("📊 Cargar Datos Demo", type="secondary", use_container_width=True):
+        st.session_state.demo_loaded = True
+        st.rerun()
+
 uploaded_file = st.file_uploader(
-    "Selecciona un archivo CSV, Excel o Parquet",
+    "O selecciona tu propio archivo CSV, Excel o Parquet",
     type=["csv", "xlsx", "xls", "parquet"],
     help="Formatos soportados: CSV, Excel (.xlsx, .xls), Parquet"
 )
+
+# Cargar datos demo si se solicitó
+if st.session_state.demo_loaded and uploaded_file is None:
+    try:
+        import pandas as pd
+        from pathlib import Path
+        
+        demo_file_path = Path(__file__).parent.parent / "base_panama_mejorada.csv"
+        
+        if demo_file_path.exists():
+            with st.spinner("Cargando datos de ejemplo..."):
+                # Leer el archivo demo
+                with open(demo_file_path, 'rb') as f:
+                    demo_data = f.read()
+                
+                # Simular uploaded_file
+                class DemoFile:
+                    def __init__(self, name, data):
+                        self.name = name
+                        self.size = len(data)
+                        self.type = "text/csv"
+                        self._data = data
+                    
+                    def getvalue(self):
+                        return self._data
+                
+                uploaded_file = DemoFile("base_panama_mejorada.csv", demo_data)
+                st.success("✅ Datos de ejemplo cargados correctamente")
+        else:
+            st.error("❌ No se encontró el archivo de datos demo")
+            st.session_state.demo_loaded = False
+    except Exception as e:
+        st.error(f"❌ Error al cargar datos demo: {str(e)}")
+        st.session_state.demo_loaded = False
 
 if uploaded_file is not None:
     # Mostrar información del archivo
