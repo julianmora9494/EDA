@@ -109,31 +109,9 @@ with col3:
 
 st.divider()
 
-# Sección de carga de archivos
-st.subheader("📁 Cargar Archivo de Datos")
-
-# Opción para cargar datos demo automáticamente
-if "demo_loaded" not in st.session_state:
-    st.session_state.demo_loaded = False
-
-col_demo1, col_demo2 = st.columns([3, 1])
-
-with col_demo1:
-    st.info("💡 **Tip**: Puedes explorar el dashboard con datos de ejemplo haciendo clic en 'Cargar Datos Demo'")
-
-with col_demo2:
-    if st.button("📊 Cargar Datos Demo", type="secondary", use_container_width=True):
-        st.session_state.demo_loaded = True
-        st.rerun()
-
-uploaded_file = st.file_uploader(
-    "O selecciona tu propio archivo CSV, Excel o Parquet",
-    type=["csv", "xlsx", "xls", "parquet"],
-    help="Formatos soportados: CSV, Excel (.xlsx, .xls), Parquet"
-)
-
-# Cargar datos demo si se solicitó
-if st.session_state.demo_loaded and uploaded_file is None:
+# Cargar datos demo automáticamente al inicio
+if "auto_loaded" not in st.session_state:
+    st.session_state.auto_loaded = True
     try:
         import pandas as pd
         from pathlib import Path
@@ -141,109 +119,134 @@ if st.session_state.demo_loaded and uploaded_file is None:
         demo_file_path = Path(__file__).parent.parent / "base_panama_mejorada.csv"
         
         if demo_file_path.exists():
-            with st.spinner("Cargando datos de ejemplo..."):
-                # Leer el archivo demo
-                with open(demo_file_path, 'rb') as f:
-                    demo_data = f.read()
+            # Leer el archivo demo
+            with open(demo_file_path, 'rb') as f:
+                demo_data = f.read()
+            
+            # Simular uploaded_file
+            class DemoFile:
+                def __init__(self, name, data):
+                    self.name = name
+                    self.size = len(data)
+                    self.type = "text/csv"
+                    self._data = data
                 
-                # Simular uploaded_file
-                class DemoFile:
-                    def __init__(self, name, data):
-                        self.name = name
-                        self.size = len(data)
-                        self.type = "text/csv"
-                        self._data = data
-                    
-                    def getvalue(self):
-                        return self._data
-                
-                uploaded_file = DemoFile("base_panama_mejorada.csv", demo_data)
-                st.success("✅ Datos de ejemplo cargados correctamente")
-        else:
-            st.error("❌ No se encontró el archivo de datos demo")
-            st.session_state.demo_loaded = False
+                def getvalue(self):
+                    return self._data
+            
+            st.session_state.demo_file = DemoFile("base_panama_mejorada.csv", demo_data)
     except Exception as e:
-        st.error(f"❌ Error al cargar datos demo: {str(e)}")
-        st.session_state.demo_loaded = False
+        st.session_state.demo_file = None
+
+# Usar archivo demo si existe, sino mostrar uploader
+uploaded_file = None
+
+if hasattr(st.session_state, 'demo_file') and st.session_state.demo_file is not None:
+    uploaded_file = st.session_state.demo_file
+    st.info("📊 **Dashboard cargado con datos de ejemplo**. Puedes cargar tu propio archivo abajo si lo deseas.")
+
+# Sección de carga de archivos (opcional)
+with st.expander("📁 Cargar tus propios datos (opcional)", expanded=False):
+    user_file = st.file_uploader(
+        "Selecciona un archivo CSV, Excel o Parquet",
+        type=["csv", "xlsx", "xls", "parquet"],
+        help="Formatos soportados: CSV, Excel (.xlsx, .xls), Parquet"
+    )
+    
+    if user_file is not None:
+        uploaded_file = user_file
+        st.session_state.demo_file = None  # Limpiar demo si se carga archivo propio
 
 if uploaded_file is not None:
-    # Mostrar información del archivo
-    file_details = {
-        "Nombre": uploaded_file.name,
-        "Tamaño": f"{uploaded_file.size:,} bytes",
-        "Tipo": uploaded_file.type
-    }
-    
-    st.success("✅ Archivo cargado correctamente")
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.json(file_details)
-    
-    with col2:
-        if st.button("🚀 Analizar Datos", type="primary", use_container_width=True):
-            with st.spinner("Procesando archivo... Esto puede tardar unos segundos."):
-                try:
-                    # Preparar archivo para envío
-                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+    # Verificar si ya está procesado
+    if "profile" not in st.session_state or st.session_state.get("filename") != uploaded_file.name:
+        # Procesar automáticamente
+        with st.spinner("Procesando archivo... Esto puede tardar unos segundos."):
+            try:
+                # Preparar archivo para envío
+                files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                
+                # Enviar a API
+                response = requests.post(
+                    f"{API_URL}/datasets/upload",
+                    files=files,
+                    timeout=300
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    dataset_id = result.get("dataset_id")
                     
-                    # Enviar a API
-                    response = requests.post(
-                        f"{API_URL}/datasets/upload",
-                        files=files,
-                        timeout=300
-                    )
+                    # Obtener perfil completo
+                    profile_response = requests.get(f"{API_URL}/datasets/{dataset_id}/profile")
                     
-                    if response.status_code == 200:
-                        result = response.json()
-                        dataset_id = result.get("dataset_id")
+                    if profile_response.status_code == 200:
+                        profile = profile_response.json()
                         
-                        # Obtener perfil completo
-                        profile_response = requests.get(f"{API_URL}/datasets/{dataset_id}/profile")
+                        # Guardar en session_state
+                        st.session_state["dataset_id"] = dataset_id
+                        st.session_state["filename"] = uploaded_file.name
+                        st.session_state["profile"] = profile
                         
-                        if profile_response.status_code == 200:
-                            profile = profile_response.json()
-                            
-                            # Guardar en session_state
-                            st.session_state["dataset_id"] = dataset_id
-                            st.session_state["filename"] = uploaded_file.name
-                            st.session_state["profile"] = profile
-                            
-                            st.success("✅ Archivo procesado y analizado correctamente")
-                            st.balloons()
-                            
-                            # Mostrar resumen rápido
-                            overview = profile.get("overview", {})
-                            
-                            st.markdown("### 📊 Resumen Rápido del Dataset")
-                            
-                            col1, col2, col3, col4 = st.columns(4)
-                            
-                            with col1:
-                                st.metric("📈 Total de Filas", f"{overview.get('n_rows', 0):,}")
-                            
-                            with col2:
-                                st.metric("📊 Total de Columnas", f"{overview.get('n_columns', 0):,}")
-                            
-                            with col3:
-                                st.metric("💾 Memoria", f"{overview.get('memory_mb', 0):.2f} MB")
-                            
-                            with col4:
-                                st.metric("🔄 Duplicados", f"{overview.get('n_duplicate_rows', 0):,}")
-                            
-                            st.divider()
-                            st.info("👈 **Siguiente paso**: Navega por las páginas en el menú lateral para ver análisis detallados de tu dataset")
-                        else:
-                            st.error("Error al obtener el perfil del dataset")
+                        st.success("✅ Archivo procesado y analizado correctamente")
+                        st.balloons()
+                        
+                        # Mostrar resumen rápido
+                        overview = profile.get("overview", {})
+                        
+                        st.markdown("### 📊 Resumen Rápido del Dataset")
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            st.metric("📈 Total de Filas", f"{overview.get('n_rows', 0):,}")
+                        
+                        with col2:
+                            st.metric("📊 Total de Columnas", f"{overview.get('n_columns', 0):,}")
+                        
+                        with col3:
+                            st.metric("💾 Memoria", f"{overview.get('memory_mb', 0):.2f} MB")
+                        
+                        with col4:
+                            st.metric("🔄 Duplicados", f"{overview.get('n_duplicate_rows', 0):,}")
+                        
+                        st.divider()
+                        st.info("👈 **Siguiente paso**: Navega por las páginas en el menú lateral para ver análisis detallados de tu dataset")
                     else:
-                        st.error(f"Error al procesar el archivo: {response.status_code}")
-                        st.code(response.text)
-                        
-                except requests.exceptions.Timeout:
-                    st.error("⏱️ Timeout: El servidor tardó demasiado en responder. Intenta con un archivo más pequeño.")
-                except Exception as e:
-                    st.error(f"❌ Error al procesar el archivo: {str(e)}")
+                        st.error("Error al obtener el perfil del dataset")
+                else:
+                    st.error(f"Error al procesar el archivo: {response.status_code}")
+                    st.code(response.text)
+                    
+            except requests.exceptions.Timeout:
+                st.error("⏱️ Timeout: El servidor tardó demasiado en responder. Intenta con un archivo más pequeño.")
+            except Exception as e:
+                st.error(f"❌ Error al procesar el archivo: {str(e)}")
+    else:
+        # Ya está procesado, mostrar resumen
+        if "profile" in st.session_state:
+            profile = st.session_state["profile"]
+            overview = profile.get("overview", {})
+            
+            st.success("✅ Dashboard listo para usar")
+            st.markdown("### 📊 Resumen del Dataset")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📈 Total de Filas", f"{overview.get('n_rows', 0):,}")
+            
+            with col2:
+                st.metric("📊 Total de Columnas", f"{overview.get('n_columns', 0):,}")
+            
+            with col3:
+                st.metric("💾 Memoria", f"{overview.get('memory_mb', 0):.2f} MB")
+            
+            with col4:
+                st.metric("🔄 Duplicados", f"{overview.get('n_duplicate_rows', 0):,}")
+            
+            st.divider()
+            st.info("👈 **Navega por las páginas** en el menú lateral para ver análisis detallados")
 
 # Mostrar información del dataset actual si existe
 if "dataset_id" in st.session_state:
